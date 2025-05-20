@@ -12,8 +12,8 @@ import {
   FormControl,
   InputLabel,
   Avatar,
-  Stack,
   useTheme,
+  Stack,
 } from '@mui/material';
 import MemoryIcon from '@mui/icons-material/Memory';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,21 +26,18 @@ const MODELS = [
     value: 'gpt-3.5',
     label: 'GPT-3.5',
     icon: <AutoAwesomeIcon />,
-    description: 'Fast, cost-effective, and suitable for most general tasks.',
     color: 'primary',
   },
   {
     value: 'gpt-4',
     label: 'GPT-4',
     icon: <RocketLaunchIcon />,
-    description: 'Advanced reasoning, creativity, and complex task handling.',
     color: 'success',
   },
   {
     value: 'llama2',
     label: 'Llama 2',
     icon: <PsychologyAltIcon />,
-    description: 'Open-source, privacy-friendly, and efficient for custom use.',
     color: 'info',
   },
 ];
@@ -58,10 +55,16 @@ const ModelSelectorPanel = ({ open, onClose }) => {
   const [selected, setSelected] = useState(getStoredModel());
 
   useEffect(() => {
+    setSelected(getStoredModel());
+  }, [open]);
+
+  useEffect(() => {
     storeModel(selected);
   }, [selected]);
 
-  const selectedModel = MODELS.find((m) => m.value === selected);
+  const handleChange = (e) => {
+    setSelected(e.target.value);
+  };
 
   return (
     <Slide direction="right" in={open} mountOnEnter unmountOnExit>
@@ -153,7 +156,7 @@ const ModelSelectorPanel = ({ open, onClose }) => {
                   maxWidth: 320,
                 }}
               >
-                Choose a language model for your RAG experience. Each model offers unique strengths.
+                Choose a language model for your RAG experience.
               </Typography>
               <FormControl
                 fullWidth
@@ -172,7 +175,7 @@ const ModelSelectorPanel = ({ open, onClose }) => {
                   labelId="model-select-label"
                   value={selected}
                   label="Model"
-                  onChange={(e) => setSelected(e.target.value)}
+                  onChange={handleChange}
                   sx={{
                     fontWeight: 600,
                     fontSize: 18,
@@ -189,6 +192,35 @@ const ModelSelectorPanel = ({ open, onClose }) => {
                         mt: 1,
                       },
                     },
+                  }}
+                  renderValue={(value) => {
+                    const model = MODELS.find((m) => m.value === value);
+                    return (
+                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Avatar
+                          sx={{
+                            bgcolor: theme.palette[model.color].main,
+                            color: theme.palette[model.color].contrastText,
+                            width: 32,
+                            height: 32,
+                            mr: 1,
+                          }}
+                          variant="rounded"
+                        >
+                          {model.icon}
+                        </Avatar>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontWeight: 600,
+                            color: theme.palette[model.color].main,
+                            fontSize: 18,
+                          }}
+                        >
+                          {model.label}
+                        </Typography>
+                      </Stack>
+                    );
                   }}
                 >
                   {MODELS.map((model) => (
@@ -226,50 +258,20 @@ const ModelSelectorPanel = ({ open, onClose }) => {
                       >
                         {model.icon}
                       </Avatar>
-                      {model.label}
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontWeight: 600,
+                          color: theme.palette[model.color].main,
+                          fontSize: 18,
+                        }}
+                      >
+                        {model.label}
+                      </Typography>
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <Fade in={!!selectedModel}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    bgcolor: theme.palette[selectedModel?.color || 'primary'].light,
-                    color: theme.palette[selectedModel?.color || 'primary'].dark,
-                    borderRadius: 3,
-                    p: 2,
-                    mt: 1,
-                    width: '100%',
-                    minHeight: 70,
-                    boxShadow: '0 1px 6px 0 rgba(60,60,120,0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      bgcolor: theme.palette[selectedModel?.color || 'primary'].main,
-                      color: theme.palette[selectedModel?.color || 'primary'].contrastText,
-                      width: 40,
-                      height: 40,
-                      fontSize: 28,
-                    }}
-                    variant="rounded"
-                  >
-                    {selectedModel?.icon}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                      {selectedModel?.label}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 400 }}>
-                      {selectedModel?.description}
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Fade>
             </Box>
           </Paper>
         </Fade>

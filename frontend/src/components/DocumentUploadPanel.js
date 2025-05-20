@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -11,6 +11,8 @@ import {
   Stack,
   useTheme,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -95,6 +97,11 @@ const DocumentUploadPanel = ({ open, onClose }) => {
   const [documents, setDocuments] = useState(getStoredDocuments());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedDocs, setSelectedDocs] = useState([]);
+
+  useEffect(() => {
+    setSelectedDocs([]);
+  }, [open]);
 
   const handleFiles = async (files) => {
     setError('');
@@ -155,11 +162,27 @@ const DocumentUploadPanel = ({ open, onClose }) => {
     const updatedDocs = documents.filter((_, i) => i !== idx);
     setDocuments(updatedDocs);
     storeDocuments(updatedDocs);
+    setSelectedDocs((prev) => prev.filter((i) => i !== idx));
   };
 
   const handleClearAll = () => {
     setDocuments([]);
     storeDocuments([]);
+    setSelectedDocs([]);
+  };
+
+  const handleSelect = (idx) => {
+    setSelectedDocs((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedDocs(documents.map((_, idx) => idx));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedDocs([]);
   };
 
   return (
@@ -311,6 +334,44 @@ const DocumentUploadPanel = ({ open, onClose }) => {
                     >
                       Uploaded Documents
                     </Typography>
+                    <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={handleSelectAll}
+                        sx={{
+                          fontWeight: 600,
+                          borderRadius: 2,
+                          px: 2,
+                          py: 0.5,
+                          textTransform: 'none',
+                          fontSize: 14,
+                          letterSpacing: 0.5,
+                        }}
+                        disabled={selectedDocs.length === documents.length}
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={handleDeselectAll}
+                        sx={{
+                          fontWeight: 600,
+                          borderRadius: 2,
+                          px: 2,
+                          py: 0.5,
+                          textTransform: 'none',
+                          fontSize: 14,
+                          letterSpacing: 0.5,
+                        }}
+                        disabled={selectedDocs.length === 0}
+                      >
+                        Deselect All
+                      </Button>
+                    </Stack>
                     <Box
                       sx={{
                         maxHeight: 180,
@@ -335,6 +396,13 @@ const DocumentUploadPanel = ({ open, onClose }) => {
                             transition: 'box-shadow 0.2s',
                           }}
                         >
+                          <Checkbox
+                            checked={selectedDocs.includes(idx)}
+                            onChange={() => handleSelect(idx)}
+                            color="primary"
+                            sx={{ mr: 1 }}
+                            inputProps={{ 'aria-label': `Select document ${doc.name}` }}
+                          />
                           <InsertDriveFileIcon
                             sx={{
                               color: theme.palette.primary.main,
@@ -351,7 +419,7 @@ const DocumentUploadPanel = ({ open, onClose }) => {
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                maxWidth: 180,
+                                maxWidth: 140,
                               }}
                             >
                               {doc.name}

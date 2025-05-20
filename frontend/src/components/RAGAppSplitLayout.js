@@ -1,41 +1,49 @@
 
 import React, { useState } from 'react';
-import { Box, useTheme, Fade, Slide, Tooltip, IconButton } from '@mui/material';
-import Sidebar from './VerticalTabBar';
+import {
+  Box,
+  useTheme,
+  Fade,
+  Slide,
+} from '@mui/material';
+import VerticalTabBar from './VerticalTabBar';
 import ChatPanel from './ChatPanel';
 import DocumentUploadPanel from './DocumentUploadPanel';
 import ModelSelectorPanel from './ModelSelectorPanel';
 import ChatHistoryPanel from './ChatHistoryPanel';
 import AccountPanel from './AccountPanel';
-import DescriptionIcon from '@mui/icons-material/Description';
-import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
-import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SystemPromptEditorCard from './SystemPromptEditorCard';
 
 const TAB_CONFIG = [
   {
     key: 'upload',
     label: 'Documents',
-    icon: <DescriptionIcon />,
     panel: DocumentUploadPanel,
+    borderColor: 'primary.main',
   },
   {
     key: 'model',
     label: 'Model',
-    icon: <SettingsSuggestIcon />,
     panel: ModelSelectorPanel,
+    borderColor: 'success.main',
   },
   {
     key: 'history',
     label: 'History',
-    icon: <HistoryEduIcon />,
     panel: ChatHistoryPanel,
+    borderColor: 'info.main',
+  },
+  {
+    key: 'systemPrompt',
+    label: 'System Prompt',
+    panel: SystemPromptEditorCard,
+    borderColor: 'warning.main',
   },
   {
     key: 'account',
     label: 'Account',
-    icon: <AccountCircleIcon />,
     panel: AccountPanel,
+    borderColor: 'secondary.main',
   },
 ];
 
@@ -43,20 +51,19 @@ const PANEL_WIDTH = { xs: '100vw', sm: 400, md: 420 };
 
 const RAGAppSplitLayout = () => {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(null);
+  const [activeTabIdx, setActiveTabIdx] = useState(null);
 
-  // Overlay panel for the selected tab
+  // Only render the panel for the active tab, no empty/extra boxes
   const renderPanel = () => {
-    if (!activeTab) return null;
-    const tab = TAB_CONFIG.find((t) => t.key === activeTab);
-    if (!tab) return null;
+    if (activeTabIdx === null) return null;
+    const tab = TAB_CONFIG[activeTabIdx];
     const PanelComponent = tab.panel;
     return (
-      <Slide direction="right" in={!!activeTab} mountOnEnter unmountOnExit>
+      <Slide direction="right" in={activeTabIdx !== null} mountOnEnter unmountOnExit>
         <Box
           sx={{
             position: 'fixed',
-            top: { xs: 0, md: 0 },
+            top: { xs: 32, md: 48 },
             left: {
               xs: 0,
               sm: 'calc(70px + 0px)',
@@ -65,7 +72,6 @@ const RAGAppSplitLayout = () => {
             zIndex: 1400,
             width: PANEL_WIDTH,
             maxWidth: PANEL_WIDTH,
-            height: '100vh',
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
@@ -74,23 +80,43 @@ const RAGAppSplitLayout = () => {
               xs: '0 8px 32px 0 rgba(60,60,120,0.10)',
               md: '-8px 0 32px 0 rgba(60,60,120,0.10)',
             },
-            bgcolor: theme.palette.background.paper,
-            borderLeft: `2px solid ${theme.palette.divider}`,
+            bgcolor: 'transparent',
+            border: 'none',
             borderRadius: 0,
+            height: 'auto',
+            minHeight: 'unset',
           }}
         >
-          <Fade in={!!activeTab}>
-            <Box sx={{ width: '100%', height: '100%' }}>
-              <PanelComponent open={!!activeTab} onClose={() => setActiveTab(null)} />
+          <Fade in={activeTabIdx !== null}>
+            <Box
+              sx={{
+                width: { xs: '100vw', sm: 400, md: 420 },
+                maxWidth: { xs: '100vw', sm: 420 },
+                bgcolor: theme.palette.background.paper,
+                border: `3px solid ${theme.palette[tab.borderColor.split('.')[0]].main}`,
+                borderRadius: 4,
+                boxShadow: 8,
+                p: { xs: 2, md: 3 },
+                mt: 0,
+                mb: 0,
+                mx: 'auto',
+                my: 2,
+                minHeight: 120,
+                maxHeight: { xs: '90vh', md: 600 },
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                position: 'relative',
+              }}
+            >
+              <PanelComponent open={activeTabIdx !== null} onClose={() => setActiveTabIdx(null)} />
             </Box>
           </Fade>
         </Box>
       </Slide>
     );
   };
-
-  // Responsive widths for tab bar and chat panel
-  const tabBarWidth = { xs: 70, sm: 90, md: 110 };
 
   return (
     <Box
@@ -105,60 +131,9 @@ const RAGAppSplitLayout = () => {
       }}
     >
       {/* Vertical Tab Bar */}
-      <Box
-        sx={{
-          width: tabBarWidth,
-          minWidth: tabBarWidth,
-          height: '100vh',
-          bgcolor: theme.palette.background.paper,
-          boxShadow: '2px 0 16px 0 rgba(60,60,120,0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          pt: { xs: 2, md: 4 },
-          zIndex: 1300,
-          borderRight: 'none',
-          m: 0,
-          p: 0,
-          transition: 'background 0.2s, box-shadow 0.2s',
-        }}
-      >
-        {TAB_CONFIG.map((tab) => (
-          <Tooltip key={tab.key} title={tab.label} placement="right" arrow>
-            <IconButton
-              onClick={() => setActiveTab(tab.key)}
-              sx={{
-                my: 2,
-                bgcolor: activeTab === tab.key
-                  ? theme.palette.primary.light
-                  : theme.palette.background.default,
-                color: activeTab === tab.key
-                  ? theme.palette.primary.main
-                  : theme.palette.text.secondary,
-                borderRadius: 3,
-                width: 56,
-                height: 56,
-                boxShadow: activeTab === tab.key
-                  ? '0 4px 16px 0 rgba(60,60,120,0.10)'
-                  : 'none',
-                border: activeTab === tab.key
-                  ? `2px solid ${theme.palette.primary.main}`
-                  : `2px solid transparent`,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: theme.palette.primary.light,
-                  color: theme.palette.primary.main,
-                },
-              }}
-              aria-label={tab.label}
-            >
-              {tab.icon}
-            </IconButton>
-          </Tooltip>
-        ))}
-      </Box>
+      <VerticalTabBar selected={activeTabIdx} onChange={setActiveTabIdx} />
 
-      {/* Chat Panel (always visible, seamlessly connected) */}
+      {/* Main Content: Only Chat Panel */}
       <Box
         sx={{
           flex: 1,
